@@ -1,18 +1,54 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, SafeAreaView, View, StatusBar, Button } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  Text,
+  SafeAreaView,
+  View,
+  StatusBar,
+  Button,
+} from "react-native";
 import Form from "./src/components/Form.js";
+import Footer from "./src/components/Footer";
+import ResultCalculation from "./src/components/ResultCalculation.js";
 import colors from "./src/utils/colors.js";
 
 export default function App() {
   const [capital, setCapital] = useState(null);
   const [interest, setInterest] = useState(null);
   const [months, setMonths] = useState(null);
+  const [total, setTotal] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const onSubmit = () => {
-    console.log("capital =>", capital);
-    console.log("interest =>", interest);   
-    console.log("months =>", months);
-  }
+  useEffect(() => {
+    if (capital && interest && months) {
+      calculate();
+    }else{
+      reset();
+    }
+  }, [capital, interest, months]);
+
+  const calculate = () => {
+    reset();
+    if (!capital) {
+      setErrorMessage("Añade la cantidad que quieres mostrar");
+    } else if (!interest) {
+      setErrorMessage("Añade el interes que quieres mostrar");
+    } else if (!months) {
+      setErrorMessage("Añade los meses a pagar");
+    } else {
+      const i = interest / 100;
+      const fee = capital / ((1 - Math.pow(i + 1, -months)) / i);
+      setTotal({
+        monthlyFee: fee.toFixed(2).replace(".", ","),
+        totalPayable: (fee * months).toFixed(2).replace(".", ","),
+      });
+    }
+  };
+
+  const reset = () => {
+    setErrorMessage("");
+    setTotal(null);
+  };
   return (
     <>
       <StatusBar barStyle="light-content"></StatusBar>
@@ -25,13 +61,14 @@ export default function App() {
           setMonths={setMonths}
         />
       </SafeAreaView>
-      <View>
-        <Text>BODY</Text>
-      </View>
-      <View>
-        <Button title="Enviar" onPress={onSubmit}/>
-        <Text>FOOOTER</Text>
-      </View>
+      <ResultCalculation
+        capital={capital}
+        interest={interest}
+        months={months}
+        total={total}
+        errorMessage={errorMessage}
+      />
+      <Footer calculate={calculate} />
     </>
   );
 }
